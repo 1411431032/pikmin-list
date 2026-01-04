@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>皮克敏全能收集清單</title>
+<style>
+:root { --main-bg: #f0f4f0; --card-bg: #ffffff; --primary: #4caf50; --amber: #ffbf00; }
+body { font-family: sans-serif; background-color: var(--main-bg); margin: 0; padding: 15px; font-size: 14px; }
+h2 { color: #2e7d32; text-align: center; margin-top: 0; }
+
+/* 待定計數區 */
+.pending-area {
+background: var(--card-bg); border-radius: 12px; padding: 15px;
+margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.pending-title { font-weight: bold; color: #d32f2f; margin-bottom: 10px; border-bottom: 2px solid #ffcdd2; padding-bottom: 5px; }
+.pending-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.pending-card { border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #fffde7; }
+.category-name { font-weight: bold; text-align: center; color: #5d4037; display: block; margin-bottom: 5px; }
+.counter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+.btn-sm { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
+.btn-sm:active { background: #eee; }
+.count-val { font-weight: bold; min-width: 15px; text-align: center; }
+
+/* 表格區 */
+.table-container { overflow-x: auto; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+table { width: 100%; border-collapse: collapse; min-width: 700px; }
+th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
+th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
+td:first-child { background: #fafafa; font-weight: bold; position: sticky; left: 0; z-index: 5; border-right: 2px solid #ddd; }
+
+/* 狀態 */
+.status-none { background: #fff; cursor: pointer; }
+.status-done { background: #c8e6c9; cursor: pointer; font-size: 1.2rem; }
+.null-cell { background: #ddd; color: #888; cursor: not-allowed; }
+
+.tip { font-size: 0.8rem; color: #666; text-align: center; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h2>🌱 皮克敏全能收集圖鑑</h2>
+<p class="tip">上方記錄「尚未進化」的數量，下方表格記錄「已獲得」的飾品</p>
+
+<div class="pending-area">
+<div class="pending-title">🎯 待定計數器 (尚未進化/不知道款式)</div>
+<div class="pending-grid" id="pendingGrid"></div>
+</div>
+
+<div class="table-container">
+<table>
+<thead>
+<tr id="headerRow">
+<th>飾品分類</th>
+<th>紅</th><th>黃</th><th>藍</th><th>紫</th><th>白</th><th>羽</th><th>岩</th><th>胖</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<script>
+const pikminNames = ['紅', '黃', '藍', '紫', '白', '羽', '岩', '胖'];
+
+// 需要計數器的分類 (多款式地點)
+const categories = ["森林", "超市", "藥妝店", "路邊", "氣象", "餐廳", "圖書館"];
+let counts = JSON.parse(localStorage.getItem('pikminCounts')) || {};
+
+// 初始化計數器數據
+categories.forEach(cat => {
+if (!counts[cat]) counts[cat] = [0, 0, 0, 0, 0, 0, 0, 0];
+});
+
+// 生成計數器 UI
+const pendingGrid = document.getElementById('pendingGrid');
+categories.forEach(cat => {
+const card = document.createElement('div');
+card.className = 'pending-card';
+let rowsHtml = `<span class="category-name">${cat}</span>`;
+pikminNames.forEach((name, i) => {
+rowsHtml += `
+<div class="counter-row">
+<span>${name}:</span>
+<div>
+<button class="btn-sm" onclick="modCount('${cat}', ${i}, -1)">-</button>
+<span class="count-val" id="cnt-${cat}-${i}">${counts[cat][i]}</span>
+<button class="btn-sm" onclick="modCount('${cat}', ${i}, 1)">+</button>
+</div>
+</div>`;
+});
+card.innerHTML = rowsHtml;
+pendingGrid.appendChild(card);
+});
+
+function modCount(cat, idx, delta) {
+counts[cat][idx] = Math.max(0, counts[cat][idx] + delta);
+document.getElementById(`cnt-${cat}-${idx}`).innerText = counts[cat][idx];
+localStorage.setItem('pikminCounts', JSON.stringify(counts));
+}
+
+// 表格資料 (完全依照截圖擴充)
+const decorData = [
+{ name: "餐廳", avail: [1,1,1,1,1,1,1,1] },
+{ name: "咖啡店", avail: [1,1,1,null,null,null,null,null] },
+{ name: "甜點店", avail: [1,1,1,1,1,1,1,1] },
+{ name: "電影院", avail: [1,1,1,null,null,null,null,null] },
+{ name: "藥妝店", avail: [1,1,null,null,null,null,1,1] },
+{ name: "動物園", avail: [1,1,1,null,null,null,null,null] },
+{ name: "森林(鍬形蟲)", avail: [1,1,1,null,null,null,null,null] },
+{ name: "森林(橡實)", avail: [1,1,1,null,null,null,null,null] },
+{ name: "水邊", avail: [1,1,1,null,null,null,null,null] },
+{ name: "郵局", avail: [1,1,1,1,1,1,1,1] },
+{ name: "美術館", avail: [1,1,1,1,1,1,1,1] },
+{ name: "機場", avail: [1,1,1,1,1,1,1,1] },
+{ name: "車站", avail: [1,1,1,1,1,1,1,1] },
+{ name: "海邊", avail: [1,1,1,1,1,1,1,1] },
+{ name: "壽司店", avail: [1,1,1,null,null,null,null,null] },
+{ name: "山岳", avail: [1,1,1,null,null,null,null,null] },
+{ name: "體育館", avail: [1,1,1,1,1,1,1,1] },
+{ name: "公車站", avail: [1,1,1,1,1,1,1,1] },
+{ name: "氣象(雨天)", avail: [null,null,1,null,null,null,null,null] },
+{ name: "氣象(雪天)", avail: [null,null,null,null,null,null,null,1] },
+{ name: "理髮店", avail: [1,1,1,1,1,1,1,1] },
+{ name: "公園", avail: [1,1,1,1,1,1,1,1] },
+{ name: "超市(香菇)", avail: [1,1,1,null,null,null,null,null] },
+{ name: "超市(香蕉)", avail: [1,1,1,null,null,null,null,null] },
+{ name: "麵包店", avail: [1,1,1,1,1,1,1,1] },
+{ name: "服飾店", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊(綠色)", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊(藍色)", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊(橙色)", avail: [1,1,1,1,1,1,1,1] }
+];
+
+const tableBody = document.getElementById('tableBody');
+decorData.forEach((decor, rowIndex) => {
+const tr = document.createElement('tr');
+tr.innerHTML = `<td>${decor.name}</td>`;
+decor.avail.forEach((isAvail, colIndex) => {
+const td = document.createElement('td');
+const cellId = `c-${rowIndex}-${colIndex}`;
+td.id = cellId;
+if (isAvail === null) {
+td.innerText = "null";
+td.className = "null-cell";
+} else {
+td.className = "status-none";
+td.dataset.state = 0;
+td.onclick = function() {
+let s = (parseInt(this.dataset.state) + 1) % 2;
+updateCell(this, s);
+saveTable();
+};
+}
+tr.appendChild(td);
+});
+tableBody.appendChild(tr);
+});
+
+function updateCell(el, state) {
+el.dataset.state = state;
+el.innerText = (state == 1) ? "✅" : "";
+el.className = (state == 1) ? "status-done" : "status-none";
+}
+
+function saveTable() {
+const states = {};
+document.querySelectorAll('td[id]').forEach(td => { states[td.id] = td.dataset.state; });
+localStorage.setItem('pikminTableFinal', JSON.stringify(states));
+}
+
+function loadTable() {
+const saved = localStorage.getItem('pikminTableFinal');
+if (saved) {
+const states = JSON.parse(saved);
+for (let id in states) {
+const td = document.getElementById(id);
+if (td) updateCell(td, states[id]);
+}
+}
+}
+window.onload = loadTable;
+</script>
+</body>
+</html>

@@ -63,9 +63,11 @@ padding: 0 8px; text-align: left;
 
 <div class="btn-group">
 <button class="action-btn export-btn" onclick="exportData()">💾 導出備份檔</button>
-<button class="action-btn import-btn" onclick="importData()">📂 導入備份碼</button>
+<input type="file" id="fileInput" style="display:none" onchange="handleImport(this)">
+<button class="action-btn import-btn" onclick="document.getElementById('fileInput').click()">📂 導入備份檔</button>
 <button class="action-btn reset-btn" onclick="clearData()">⚠️ 重設資料</button>
 </div>
+
 
 <script>
 const decorData = [
@@ -216,24 +218,48 @@ a.click();
 URL.revokeObjectURL(url);
 }
 
-// 導入功能：貼上文字還原
-function importData() {
-const backup = prompt("請貼上備份檔中的文字內容：");
-if (backup) {
+// 導出備份檔 (保持不變或更新)
+function exportData() {
+const data = localStorage.getItem('pikmin_v4_data');
+if (!data || data === "{}") {
+alert("目前沒有紀錄可以備份喔！");
+return;
+}
+const blob = new Blob([data], {type: "text/plain"});
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "pikmin_backup_" + new Date().toISOString().slice(0,10) + ".txt";
+a.click();
+URL.revokeObjectURL(url);
+}
+
+// 新增 handleImport 函數來讀取檔案
+function handleImport(input) {
+const file = input.files[0];
+if (!file) return;
+
+const reader = new FileReader();
+reader.onload = function(e) {
+const content = e.target.result;
 try {
-JSON.parse(backup);
-localStorage.setItem('pikmin_v4_data', backup);
-alert("導入成功！");
-location.reload();
-} catch (e) {
-alert("格式不正確，請重新檢查貼上的內容。");
+JSON.parse(content); // 驗證是否為正確的 JSON 格式
+localStorage.setItem('pikmin_v4_data', content);
+alert("備份檔導入成功！");
+location.reload(); // 重新整理網頁顯示新進度
+} catch (err) {
+alert("錯誤：這不是有效的備份檔內容。");
 }
+};
+reader.readAsText(file);
+input.value = ''; // 清除選擇，方便下次重複操作
 }
-}
+
 
 window.onload = loadData;
 </script>
 </body>
 </html>
+
 
 

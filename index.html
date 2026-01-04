@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>皮克敏飾品收集圖鑑</title>
+<style>
+.cell-btn { touch-action: manipulation; }
+:root { --primary: #4caf50; --growing: #fff9c4; --done: #c8e6c9; }
+body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: #f4f7f4; margin: 0; padding: 10px; }
+h2 { color: #2e7d32; text-align: center; margin-bottom: 5px; }
+
+.legend { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; font-size: 0.85rem; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.box { width: 16px; height: 16px; border: 1px solid #ccc; border-radius: 3px; }
+
+.table-container { overflow-x: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-height: 75vh; }
+table { width: 100%; border-collapse: collapse; min-width: 700px; table-layout: fixed; }
+
+th, td { border: 1px solid #eee; text-align: center; height: 44px; padding: 0; box-sizing: border-box; }
+th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; font-size: 0.9rem; }
+td:first-child {
+width: 160px; background: #fafafa; font-weight: bold; font-size: 0.8rem;
+position: sticky; left: 0; z-index: 5; border-right: 2px solid #ddd;
+padding: 0 8px; text-align: left;
+}
+
+.cell-btn { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem; touch-action: manipulation; }
+.status-0 { background: #fff; }
+.status-1 { background: var(--growing); }
+.status-2 { background: var(--done); }
+.null-cell { background: #e0e0e0; color: #999; cursor: not-allowed; font-size: 0.65rem; }
+
+/* 按鈕區樣式 */
+.btn-group { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+.action-btn { padding: 10px 16px; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+.export-btn { background: #2196F3; } /* 藍色 */
+.import-btn { background: #ff9800; } /* 橘色 */
+.reset-btn { background: #ff5252; } /* 紅色 */
+</style>
+</head>
+<body>
+
+<h2>🌱 皮克敏飾品收集圖鑑</h2>
+
+<div class="legend">
+<div class="legend-item"><div class="box" style="background:white"></div> 未獲得</div>
+<div class="legend-item"><div class="box" style="background:var(--growing)"></div> 👾 培育中</div>
+<div class="legend-item"><div class="box" style="background:var(--done)"></div> ✅ 已完成</div>
+</div>
+
+<div class="table-container">
+<table>
+<thead>
+<tr id="headerRow">
+<th>飾品分類</th>
+<th>紅</th><th>黃</th><th>藍</th><th>紫</th><th>白</th><th>岩</th><th>粉</th><th>冰</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="btn-group">
+<button class="action-btn export-btn" onclick="exportData()">💾 導出備份檔</button>
+<button class="action-btn import-btn" onclick="importData()">📂 導入備份碼</button>
+<button class="action-btn reset-btn" onclick="clearData()">⚠️ 重設資料</button>
+</div>
+
+<script>
+const decorData = [
+{ name: "餐廳 廚師帽子", avail: [1,1,1,1,1,1,1,null] },
+{ name: "咖啡廳 咖啡杯", avail: [1,1,1,1,1,1,1,null] },
+{ name: "甜點店 馬卡龍", avail: [1,1,1,1,1,1,1,null] },
+{ name: "甜點店 甜甜圈", avail: [1,1,1,1,1,1,1,null] },
+{ name: "電影院 爆米花", avail: [1,1,1,1,1,1,1,null] },
+{ name: "藥局 牙刷", avail: [1,1,1,1,1,1,1,null] },
+{ name: "動物園 蒲公英", avail: [1,1,1,1,1,1,1,null] },
+{ name: "森林 鍬形蟲", avail: [1,1,1,1,1,1,1,null] },
+{ name: "森林 橡栗", avail: [1,1,1,1,1,1,1,null] },
+{ name: "水邊 擬餌", avail: [1,1,1,1,1,1,1,null] },
+{ name: "郵局 郵票", avail: [1,1,1,1,1,1,1,null] },
+{ name: "美術館 畫框", avail: [1,1,1,1,1,1,1,null] },
+{ name: "機場 飛機", avail: [1,1,1,1,1,1,1,null] },
+{ name: "車站 電車", avail: [1,1,1,1,1,1,1,null] },
+{ name: "車站 票券", avail: [1,1,1,1,1,1,1,null] },
+{ name: "海灘 貝殼", avail: [1,1,1,1,1,1,1,null] },
+{ name: "漢堡店 漢堡", avail: [1,1,1,1,1,1,1,null] },
+{ name: "便利店 瓶蓋", avail: [1,1,1,1,1,1,1,null] },
+{ name: "便利店 零食", avail: [1,1,1,1,1,1,1,null] },
+{ name: "超市 蘑菇", avail: [1,1,1,1,1,1,1,null] },
+{ name: "超市 香蕉", avail: [1,1,1,1,1,1,1,null] },
+{ name: "麵包店 法國麵包", avail: [1,1,1,1,1,1,1,null] },
+{ name: "美容院 剪刀", avail: [1,1,1,1,1,1,1,null] },
+{ name: "服飾店 髮圈", avail: [1,1,1,1,1,1,1,null] },
+{ name: "公園 幸運草", avail: [1,1,1,1,1,1,1,null] },
+{ name: "圖書館 迷你書", avail: [1,1,1,1,1,1,1,null] },
+{ name: "路邊 綠色貼紙", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊 藍色貼紙", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊 黃色貼紙", avail: [1,1,1,1,1,1,1,1] },
+{ name: "路邊 金幣貼紙", avail: [1,1,1,1,1,1,1,1] },
+{ name: "壽司餐廳 壽司", avail: [1,1,1,1,1,1,1,null] },
+{ name: "山丘 山丘別針", avail: [1,1,1,1,1,1,1,1] },
+{ name: "體育館 鑰匙圈", avail: [1,1,1,1,1,1,1,1] },
+{ name: "雨天 葉子帽", avail: [null,null,1,null,null,null,null,null] },
+{ name: "下雪 雪", avail: [null,null,1,null,1,null,null,1] },
+{ name: "主題樂園 門票1", avail: [1,1,1,null,null,null,null,null] },
+{ name: "主題樂園 門票2", avail: [1,1,1,null,null,null,null,null] },
+{ name: "公車站 公車", avail: [1,1,1,1,1,1,1,null] },
+{ name: "義式餐廳 披薩", avail: [1,1,1,1,1,1,1,null] },
+{ name: "義式餐廳 義大利麵", avail: [1,1,1,1,1,1,1,null] },
+{ name: "拉麵店 鑰匙圈", avail: [1,1,1,1,1,1,1,null] },
+{ name: "橋樑 別針", avail: [1,1,1,1,1,1,1,null] },
+{ name: "飯店 飯店備品", avail: [1,1,1,1,1,1,1,null] },
+{ name: "化妝品商店 化妝品", avail: [1,1,1,1,1,1,1,null] },
+{ name: "神社和寺廟 運勢", avail: [1,1,1,1,1,1,1,null] },
+{ name: "電器行 電池", avail: [null,1,null,null,null,null,null,null] },
+{ name: "電器行 仙女燈", avail: [null,1,null,null,null,null,null,null] },
+{ name: "咖哩餐廳 一碗咖哩", avail: [1,1,1,1,1,1,1,null] },
+{ name: "五金行 工具", avail: [1,1,1,1,1,1,1,null] },
+{ name: "大學&學院", avail: [1,1,1,null,null,null,null,null] },
+{ name: "墨西哥餐廳 塔可餅", avail: [1,1,1,1,1,1,1,null] },
+{ name: "洗衣店&乾洗店 用品", avail: [1,1,1,1,1,1,1,null] },
+{ name: "韓國餐廳 韓國泡菜", avail: [null,null,null,1,null,null,null,null] },
+{ name: "瑪利歐帽子", avail: [null,null,1,null,null,null,null,null] },
+{ name: "連指手套", avail: [1,1,1,1,1,1,1,null] },
+{ name: "拼圖:2021年秋天的回憶", avail: [1,1,1,1,1,1,1,null] },
+{ name: "三週年紀念杯子蛋糕", avail: [1,1,1,1,1,1,1,null] },
+{ name: "裝飾球", avail: [1,1,1,1,1,1,1,null] },
+{ name: "四週年紀念繁花禮盒", avail: [1,1,1,1,1,1,1,1] },
+{ name: "四週年紀念零食", avail: [1,1,1,1,1,1,1,null] },
+{ name: "2025裝飾", avail: [1,1,1,1,1,1,1,1] },
+{ name: "奶嘴", avail: [1,null,null,null,null,null,null,null] },
+{ name: "日式年菜 世界年菜", avail: [1,1,1,1,1,1,1,1] },
+{ name: "金色飛機玩具", avail: [null,1,null,null,null,null,null,null] }
+];
+
+const tableBody = document.getElementById('tableBody');
+
+// 初始化表格
+decorData.forEach((decor, rowIndex) => {
+const tr = document.createElement('tr');
+tr.innerHTML = `<td>${decor.name}</td>`;
+
+decor.avail.forEach((isAvail, colIndex) => {
+const td = document.createElement('td');
+const cellId = `v4-${rowIndex}-${colIndex}`;
+
+if (isAvail === null) {
+td.innerText = "null";
+td.className = "null-cell";
+} else {
+const btn = document.createElement('div');
+btn.id = cellId;
+btn.className = "cell-btn status-0";
+btn.dataset.state = 0;
+btn.onclick = function() {
+let next = (parseInt(this.dataset.state) + 1) % 3;
+updateCell(this, next);
+saveData();
+};
+td.appendChild(btn);
+}
+tr.appendChild(td);
+});
+tableBody.appendChild(tr);
+});
+
+function updateCell(el, state) {
+el.dataset.state = state;
+el.className = `cell-btn status-${state}`;
+if (state == 0) el.innerText = "";
+else if (state == 1) el.innerText = "👾";
+else if (state == 2) el.innerText = "✅";
+}
+
+function saveData() {
+const states = {};
+document.querySelectorAll('.cell-btn[id]').forEach(btn => {
+states[btn.id] = btn.dataset.state;
+});
+localStorage.setItem('pikmin_v4_data', JSON.stringify(states));
+}
+
+function loadData() {
+const saved = localStorage.getItem('pikmin_v4_data');
+if (saved) {
+const states = JSON.parse(saved);
+for (let id in states) {
+const el = document.getElementById(id);
+if (el) updateCell(el, states[id]);
+}
+}
+}
+
+function clearData() {
+if (confirm("確定要清除所有記錄嗎？")) {
+localStorage.removeItem('pikmin_v4_data');
+location.reload();
+}
+}
+
+// 導出功能：下載備份檔
+function exportData() {
+const data = localStorage.getItem('pikmin_v4_data');
+if (!data || data === "{}") {
+alert("目前沒有紀錄可以備份喔！");
+return;
+}
+const blob = new Blob([data], {type: "text/plain"});
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "pikmin_backup_" + new Date().toISOString().slice(0,10) + ".txt";
+a.click();
+URL.revokeObjectURL(url);
+}
+
+// 導入功能：貼上文字還原
+function importData() {
+const backup = prompt("請貼上備份檔中的文字內容：");
+if (backup) {
+try {
+JSON.parse(backup);
+localStorage.setItem('pikmin_v4_data', backup);
+alert("導入成功！");
+location.reload();
+} catch (e) {
+alert("格式不正確，請重新檢查貼上的內容。");
+}
+}
+}
+
+window.onload = loadData;
+</script>
+</body>
+</html>

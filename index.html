@@ -45,7 +45,7 @@ padding: 0 8px; text-align: left;
 
 <div class="legend">
 <div class="legend-item"><div class="box" style="background:white"></div> 未獲得</div>
-<div class="legend-item"><div class="box" style="background:var(--growing)"></div> 👾 培育中</div>
+<div class="legend-item"><div class="box" style="background:var(--growing)"></div> 培育中</div>
 <div class="legend-item"><div class="box" style="background:var(--done)"></div> ✅ 已完成</div>
 </div>
 
@@ -170,7 +170,7 @@ function updateCell(el, state) {
 el.dataset.state = state;
 el.className = `cell-btn status-${state}`;
 if (state == 0) el.innerText = "";
-else if (state == 1) el.innerText = "👾";
+else if (state == 1) el.innerText = "";
 else if (state == 2) el.innerText = "✅";
 }
 
@@ -235,4 +235,5 @@ window.onload = loadData;
 </script>
 </body>
 </html>
+
 
